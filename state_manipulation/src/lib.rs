@@ -348,6 +348,14 @@ fn print_cell(platform: &Platform, coords: (i32, i32), cell: Cell, frame_count: 
 fn next_level(size: Size, mut rng: StdRng) -> State {
     let mut cells = HashMap::new();
 
+    for y in 0..size.height {
+        for x in 0..size.width {
+            if rng.next_f32() > 0.9 {
+                cells.insert((x, y), Wall);
+            }
+        }
+    }
+
     cells.insert((0, 0), Goal);
 
     State {
