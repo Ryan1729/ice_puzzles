@@ -1,9 +1,7 @@
 ##TODO
--> actual generation of levels
-  -> simulate all possible inputs upto length N,
-    keeping a count of the times each cell was visited
-  -> place goal at cell with lowest non-zero count
 -> reset level button
+  -> get working in-game
+  -> get working and show on title screnn
 
 ## Installation for Compilation
 

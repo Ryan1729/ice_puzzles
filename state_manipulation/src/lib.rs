@@ -363,20 +363,18 @@ fn next_level(size: Size, mut rng: StdRng) -> State {
         }
     }
 
-    println!("player_pos: {:?}", counts);
-
-    let mut maximum_count = 0;
+    let mut non_zero_minimum_count = std::u32::MAX;
 
     for &v in counts.values() {
-        if v > maximum_count {
-            maximum_count = v;
+        if v != 0 && v < non_zero_minimum_count {
+            non_zero_minimum_count = v;
         }
     }
 
     //we do the sort so that the rng seed determines the puzzle,
     //not the hash ordering
     let mut goal_locations: Vec<(i32, i32)> = counts.iter()
-        .filter(|&(_, &v)| v == maximum_count)
+        .filter(|&(_, &v)| v == non_zero_minimum_count)
         .map(|(&coord, _)| coord)
         .collect();
 
@@ -423,8 +421,43 @@ impl Iterator for DirsIter {
             self.started = true;
             self.index = self.index.overflowing_add(1).0;
 
-            Some(vec![Up, Right, Down, Left])
+            let mut result = Vec::new();
+
+            for &mask in vec![First, Second, Third, Fourth].iter() {
+                match extract_dir(mask, self.index) {
+                    Stopped => {}
+                    dir => result.push(dir),
+                }
+            }
+
+            Some(result)
         }
+    }
+}
+
+#[derive(Copy, Clone)]
+enum TwoBits {
+    First,
+    Second,
+    Third,
+    Fourth,
+}
+use TwoBits::*;
+
+fn extract_dir(mask: TwoBits, index: u8) -> Motion {
+    let bits = match mask {
+        First => index & 0b11,
+        Second => (index & 0b1100) >> 2,
+        Third => (index & 0b110000) >> 4,
+        Fourth => (index & 0b11000000) >> 6,
+    };
+
+    match bits {
+        0b00 => Up,
+        0b01 => Right,
+        0b10 => Down,
+        0b11 => Left,
+        _ => Stopped,
     }
 }
 
