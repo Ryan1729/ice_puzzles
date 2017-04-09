@@ -11,6 +11,7 @@ extern crate state_manipulation;
 use libloading::Library;
 
 use bear_lib_terminal::terminal::{self, config, Event, KeyCode, state};
+use bear_lib_terminal::terminal::config::font;
 use bear_lib_terminal::Color;
 use bear_lib_terminal::geometry::{Point, Rect, Size};
 
@@ -79,9 +80,13 @@ impl Application {
     }
 }
 
+const TILE_SIZE: i32 = 45;
+
 fn main() {
-    terminal::open("____", 80, 30);
-    terminal::set(config::Window::empty().resizeable(true));
+    terminal::open("____", 16, 16);
+    terminal::set(config::Window::empty()
+                      .resizeable(true)
+                      .cellsize(config::Cellsize::Sized(Size::new(TILE_SIZE, TILE_SIZE))));
     terminal::set(vec![config::InputFilter::Group {
                            group: config::InputFilterGroup::Keyboard,
                            both: false,
@@ -90,6 +95,11 @@ fn main() {
                            group: config::InputFilterGroup::Mouse,
                            both: false,
                        }]);
+    // terminal::set(font::bitmap(font::Origin::Offset('@'), "plater.png")
+    //                   .size(Size::new(TILE_SIZE, TILE_SIZE)));
+    terminal::set(font::bitmap(font::Origin::Offset('☒'), "wall.png").size(Size::new(TILE_SIZE,
+                                                                                       TILE_SIZE)));
+
 
 
 

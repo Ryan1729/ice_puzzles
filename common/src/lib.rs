@@ -1,4 +1,10 @@
+extern crate rand;
+
 use std::fmt;
+
+use std::collections::HashMap;
+
+use rand::{StdRng, Rand, Rng};
 
 pub struct Platform {
     pub print_xy: fn(i32, i32, &str),
@@ -19,10 +25,33 @@ pub struct Platform {
 }
 
 pub struct State {
-    pub greeting: String,
+    pub player_pos: (i32, i32),
+    pub cells: Cells,
+    pub rng: StdRng,
+    pub title_screen: bool,
 }
 
+pub type Cells = HashMap<(i32, i32), Cell>;
 
+#[derive(Copy, Clone)]
+pub enum Cell {
+    Wall,
+}
+use Cell::*;
+
+impl ToString for Cell {
+    fn to_string(&self) -> String {
+        match *self {
+            Wall => "☒".to_string(),
+        }
+    }
+}
+
+impl std::fmt::Debug for Cell {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.to_string())
+    }
+}
 
 
 

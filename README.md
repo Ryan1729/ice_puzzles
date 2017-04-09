@@ -1,4 +1,8 @@
-This is a template to make it easy to get started with live code reloading using BearLibTerminal.
+##TODO
+-> goal tile graphics
+  -> 2 or so frame animation?
+-> Movement onto goal space
+-> arrows and WASD display on title screen
 
 ## Installation for Compilation
 
@@ -17,5 +21,5 @@ Comment out the line containing `crate-type = ["dylib"]` in the `Cargo.toml` in 
 Run `cargo build --release` then copy the exe in `./target/release` to the desired location as well as the following :
 
 * a copy of the precompiled `BearLibTerminal.dll` and `BearLibTerminal.lib`.
-* the `state_manipulation.dll` in `./target/release/deps` 
+* the `state_manipulation.dll` in `./target/release/deps`
 * any necessary assets (graphics, sound, etc.).
