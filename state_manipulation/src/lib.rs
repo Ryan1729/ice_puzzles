@@ -358,14 +358,48 @@ fn next_level(size: Size, mut rng: StdRng) -> State {
 
     cells.insert((0, 0), Goal);
 
+    let mut player_pos = gen_coord(size, &mut rng);
+
+    if let Some(_) = cells.get(&player_pos) {
+        let first_player_pos = player_pos;
+        while let Some(_) = cells.get(&player_pos) {
+            player_pos = next_coord(size, player_pos);
+
+            if player_pos == first_player_pos {
+                cells.remove(&player_pos);
+            }
+        }
+    }
+
+
+
     State {
-        player_pos: (7, 3),
+        player_pos: player_pos,
         cells: cells,
         rng: rng,
         title_screen: false,
         frame_count: 0,
         motion: Stopped,
     }
+}
+
+fn gen_coord(size: Size, rng: &mut StdRng) -> (i32, i32) {
+    (rng.gen_range::<i32>(0, size.width), rng.gen_range::<i32>(0, size.height))
+}
+
+fn next_coord(size: Size, (x, y): (i32, i32)) -> (i32, i32) {
+    debug_assert!(x >= 0 && y >= 0, "bad coord: ({}, {})", x, y);
+
+    if x + 1 >= size.width {
+        if y + 1 >= size.height {
+            (0, 0)
+        } else {
+            (0, y + 1)
+        }
+    } else {
+        (x + 1, y)
+    }
+
 }
 
 use std::ops::Add;
