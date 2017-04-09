@@ -3,6 +3,7 @@
   -> simulate all possible inputs upto length N,
     keeping a count of the times each cell was visited
   -> place goal at cell with lowest non-zero count
+-> reset level button
 
 ## Installation for Compilation
 

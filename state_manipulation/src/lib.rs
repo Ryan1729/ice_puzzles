@@ -159,32 +159,8 @@ pub fn game_update_and_render(platform: &Platform,
 fn move_player(size: Size, state: &mut State) {
     match state.motion {
         Stopped => {}
-        Up => {
-            let target = add(state.player_pos, (0, -1));
-            if can_go(size, &state.cells, target) {
-                state.player_pos = target;
-            } else {
-                state.motion = Stopped;
-            }
-        }
-        Right => {
-            let target = add(state.player_pos, (1, 0));
-            if can_go(size, &state.cells, target) {
-                state.player_pos = target;
-            } else {
-                state.motion = Stopped;
-            }
-        }
-        Down => {
-            let target = add(state.player_pos, (0, 1));
-            if can_go(size, &state.cells, target) {
-                state.player_pos = target;
-            } else {
-                state.motion = Stopped;
-            }
-        }
-        Left => {
-            let target = add(state.player_pos, (-1, 0));
+        dir => {
+            let target = add(state.player_pos, dir_to_tuple(dir));
             if can_go(size, &state.cells, target) {
                 state.player_pos = target;
             } else {
@@ -356,8 +332,6 @@ fn next_level(size: Size, mut rng: StdRng) -> State {
         }
     }
 
-    cells.insert((0, 0), Goal);
-
     let mut player_pos = gen_coord(size, &mut rng);
 
     if let Some(_) = cells.get(&player_pos) {
@@ -371,7 +345,49 @@ fn next_level(size: Size, mut rng: StdRng) -> State {
         }
     }
 
+    let mut counts: HashMap<(i32, i32), u32> = HashMap::new();
 
+    for dirs in DirsIter::new() {
+        let mut current_pos = player_pos;
+
+        for &dir in dirs.iter() {
+            loop {
+                let target = add(current_pos, dir_to_tuple(dir));
+                if can_go(size, &cells, target) {
+                    current_pos = target;
+                    increment_count(&mut counts, current_pos)
+                } else {
+                    break;
+                }
+            }
+        }
+    }
+
+    println!("player_pos: {:?}", counts);
+
+    let mut maximum_count = 0;
+
+    for &v in counts.values() {
+        if v > maximum_count {
+            maximum_count = v;
+        }
+    }
+
+    //we do the sort so that the rng seed determines the puzzle,
+    //not the hash ordering
+    let mut goal_locations: Vec<(i32, i32)> = counts.iter()
+        .filter(|&(_, &v)| v == maximum_count)
+        .map(|(&coord, _)| coord)
+        .collect();
+
+    goal_locations.sort_by_key(|&(coord, _)| coord);
+
+    let len = goal_locations.len();
+    if len > 0 {
+        cells.insert(goal_locations.swap_remove(rng.gen_range(0, len)), Goal);
+    } else {
+        cells.insert(player_pos, Goal);
+    }
 
     State {
         player_pos: player_pos,
@@ -382,6 +398,47 @@ fn next_level(size: Size, mut rng: StdRng) -> State {
         motion: Stopped,
     }
 }
+
+struct DirsIter {
+    index: u8,
+    started: bool,
+}
+
+impl DirsIter {
+    fn new() -> Self {
+        DirsIter {
+            index: 255,
+            started: false,
+        }
+    }
+}
+
+impl Iterator for DirsIter {
+    type Item = Vec<Motion>;
+
+    fn next(&mut self) -> Option<Vec<Motion>> {
+        if self.started && self.index == 255 {
+            None
+        } else {
+            self.started = true;
+            self.index = self.index.overflowing_add(1).0;
+
+            Some(vec![Up, Right, Down, Left])
+        }
+    }
+}
+
+fn dir_to_tuple(dir: Motion) -> (i32, i32) {
+    match dir {
+        Up => (0, -1),
+        Right => (1, 0),
+        Down => (0, 1),
+        Left => (-1, 0),
+        Stopped => (0, 0),
+    }
+}
+
+
 
 fn gen_coord(size: Size, rng: &mut StdRng) -> (i32, i32) {
     (rng.gen_range::<i32>(0, size.width), rng.gen_range::<i32>(0, size.height))
@@ -410,4 +467,10 @@ fn add<T: Add<Output = T>>((x1, y1): (T, T), (x2, y2): (T, T)) -> (T, T) {
 use std::ops::Sub;
 fn sub<T: Sub<Output = T>>((x1, y1): (T, T), (x2, y2): (T, T)) -> (T, T) {
     (x1 - x2, y1 - y2)
+}
+
+fn increment_count(counts: &mut HashMap<(i32, i32), u32>, key: (i32, i32)) {
+    let count = counts.entry(key).or_insert(0);
+    *count = count.saturating_add(1);
+
 }
