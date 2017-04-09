@@ -85,10 +85,80 @@ pub fn update_and_render(platform: &Platform, state: &mut State, events: &mut Ve
 
         draw(platform, state);
 
+        draw_button(platform,
+                    3,
+                    8,
+                    3,
+                    3,
+                    "W",
+                    (platform.key_pressed)(KeyCode::W));
+        draw_button(platform,
+                    0,
+                    11,
+                    3,
+                    3,
+                    "A",
+                    (platform.key_pressed)(KeyCode::A));
+        draw_button(platform,
+                    3,
+                    11,
+                    3,
+                    3,
+                    "S",
+                    (platform.key_pressed)(KeyCode::S));
+        draw_button(platform,
+                    6,
+                    11,
+                    3,
+                    3,
+                    "D",
+                    (platform.key_pressed)(KeyCode::D));
+
+
+        draw_button(platform,
+                    12,
+                    8,
+                    3,
+                    3,
+                    "↑",
+                    (platform.key_pressed)(KeyCode::Up));
+        draw_button(platform,
+                    9,
+                    11,
+                    3,
+                    3,
+                    "←",
+                    (platform.key_pressed)(KeyCode::Left));
+        draw_button(platform,
+                    12,
+                    11,
+                    3,
+                    3,
+                    "↓",
+                    (platform.key_pressed)(KeyCode::Down));
+        draw_button(platform,
+                    15,
+                    11,
+                    3,
+                    3,
+                    "→",
+                    (platform.key_pressed)(KeyCode::Right));
+
         false
     } else {
         game_update_and_render(platform, state, events)
     }
+}
+
+fn draw_button(platform: &Platform, x: i32, y: i32, w: i32, h: i32, label: &str, pressed: bool) {
+
+    if pressed {
+        draw_pressed_button_rect(platform, x, y, w, h);
+    } else {
+        draw_unpressed_button_rect(platform, x, y, w, h);
+    }
+
+    (platform.print_xy)(x + 1, y + 1, label);
 }
 
 pub fn game_update_and_render(platform: &Platform,
@@ -245,6 +315,50 @@ fn draw(platform: &Platform, state: &State) {
     }
 
     print_tuple(platform, state.player_pos, "@");
+}
+
+fn draw_unpressed_button_rect(platform: &Platform, x: i32, y: i32, w: i32, h: i32) {
+    draw_rect_with(platform,
+                   x,
+                   y,
+                   w,
+                   h,
+                   ["┌", "─", "╖", "│", "║", "╘", "═", "╝"]);
+}
+
+fn draw_pressed_button_rect(platform: &Platform, x: i32, y: i32, w: i32, h: i32) {
+    draw_rect_with(platform,
+                   x,
+                   y,
+                   w,
+                   h,
+                   ["╔", "═", "╕", "║", "│", "╙", "─", "┘"]);
+}
+
+fn draw_rect_with(platform: &Platform, x: i32, y: i32, w: i32, h: i32, edges: [&str; 8]) {
+    (platform.clear)(Some(Rect::from_values(x, y, w, h)));
+
+    let right = x + w - 1;
+    let bottom = y + h - 1;
+    // top
+    (platform.print_xy)(x, y, edges[0]);
+    for i in (x + 1)..right {
+        (platform.print_xy)(i, y, edges[1]);
+    }
+    (platform.print_xy)(right, y, edges[2]);
+
+    // sides
+    for i in (y + 1)..bottom {
+        (platform.print_xy)(x, i, edges[3]);
+        (platform.print_xy)(right, i, edges[4]);
+    }
+
+    //bottom
+    (platform.print_xy)(x, bottom, edges[5]);
+    for i in (x + 1)..right {
+        (platform.print_xy)(i, bottom, edges[6]);
+    }
+    (platform.print_xy)(right, bottom, edges[7]);
 }
 
 fn print_cell(platform: &Platform, coords: (i32, i32), cell: Cell) {
