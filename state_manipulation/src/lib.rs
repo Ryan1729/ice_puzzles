@@ -29,7 +29,13 @@ pub fn new_state(size: Size) -> State {
 #[no_mangle]
 pub fn new_state(size: Size) -> State {
     //show the title screen
-    let seed: &[_] = &[42];
+    let timestamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|dur| dur.as_secs())
+        .unwrap_or(42);
+
+    println!("{}", timestamp);
+    let seed: &[_] = &[timestamp as usize];
     let rng: StdRng = SeedableRng::from_seed(seed);
 
     let mut cells = HashMap::new();
