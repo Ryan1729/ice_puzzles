@@ -12,20 +12,20 @@ use rand::{StdRng, SeedableRng, Rand, Rng};
 //NOTE(Ryan1729): debug_assertions only appears to work correctly when the
 //crate is not a dylib. Assuming you make this crate *not* a dylib on release,
 //these configs should work
-// #[cfg(debug_assertions)]
-// #[no_mangle]
-// pub fn new_state(size: Size) -> State {
-//     //skip the title screen
-//     println!("debug {}",
-//              if cfg!(debug_assertions) { "on" } else { "off" });
-//
-//     let seed: &[_] = &[42];
-//     let rng: StdRng = SeedableRng::from_seed(seed);
-//
-//     next_level(size, (8, 8), _000011, rng)
-// }
-//
-// #[cfg(not(debug_assertions))]
+#[cfg(debug_assertions)]
+#[no_mangle]
+pub fn new_state(size: Size) -> State {
+    //skip the title screen
+    println!("debug {}",
+             if cfg!(debug_assertions) { "on" } else { "off" });
+
+    let seed: &[_] = &[42];
+    let rng: StdRng = SeedableRng::from_seed(seed);
+
+    next_level(size, rng)
+}
+
+#[cfg(not(debug_assertions))]
 #[no_mangle]
 pub fn new_state(size: Size) -> State {
     //show the title screen
@@ -147,6 +147,10 @@ pub fn game_update_and_render(platform: &Platform,
 
     move_player((platform.size)(), state);
 
+    if let Some(&Goal) = state.cells.get(&state.player_pos) {
+        *state = next_level((platform.size)(), state.rng);
+    }
+
     draw(platform, state);
 
     false
@@ -229,6 +233,7 @@ fn can_go(size: Size, cells: &Cells, (x, y): (i32, i32)) -> bool {
 
         match cells.get(&(x, y)) {
             None => true,
+            Some(&Goal) => true,
             Some(&Wall) => false,
         }
     } else {
@@ -281,7 +286,7 @@ fn print_tuple(platform: &Platform, (x, y): (i32, i32), text: &str) {
 
 fn draw(platform: &Platform, state: &State) {
     for (&coords, &cell) in state.cells.iter() {
-        print_cell(platform, coords, cell);
+        print_cell(platform, coords, cell, state.frame_count);
     }
 
     print_tuple(platform, state.player_pos, "@");
@@ -331,14 +336,19 @@ fn draw_rect_with(platform: &Platform, x: i32, y: i32, w: i32, h: i32, edges: [&
     (platform.print_xy)(right, bottom, edges[7]);
 }
 
-fn print_cell(platform: &Platform, coords: (i32, i32), cell: Cell) {
+fn print_cell(platform: &Platform, coords: (i32, i32), cell: Cell, frame_count: u32) {
+    match cell {
+        Goal => print_tuple(platform, coords, goal_string(frame_count)),
+        _ => print_tuple(platform, coords, &cell.to_string()),
+    }
     // with_layer!(platform, CELL_LAYER, {
-    print_tuple(platform, coords, &cell.to_string())
     // })
 }
 
 fn next_level(size: Size, mut rng: StdRng) -> State {
     let mut cells = HashMap::new();
+
+    cells.insert((0, 0), Goal);
 
     State {
         player_pos: (7, 3),

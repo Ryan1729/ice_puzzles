@@ -39,6 +39,7 @@ pub type Cells = HashMap<(i32, i32), Cell>;
 #[derive(Copy, Clone)]
 pub enum Cell {
     Wall,
+    Goal,
 }
 use Cell::*;
 
@@ -55,6 +56,7 @@ impl ToString for Cell {
     fn to_string(&self) -> String {
         match *self {
             Wall => "☒".to_string(),
+            Goal => "\u{E010}".to_string(),
         }
     }
 }
