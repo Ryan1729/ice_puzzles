@@ -27,6 +27,7 @@ pub struct Platform {
 
 pub struct State {
     pub player_pos: (i32, i32),
+    pub initial_player_pos: (i32, i32),
     pub cells: Cells,
     pub rng: StdRng,
     pub title_screen: bool,

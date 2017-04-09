@@ -7,7 +7,7 @@ use common::Motion::*;
 
 use std::collections::HashMap;
 
-use rand::{StdRng, SeedableRng, Rand, Rng};
+use rand::{StdRng, SeedableRng, Rng};
 
 //NOTE(Ryan1729): debug_assertions only appears to work correctly when the
 //crate is not a dylib. Assuming you make this crate *not* a dylib on release,
@@ -53,8 +53,11 @@ pub fn new_state(size: Size) -> State {
     cells.insert((11, 3), Wall);
     cells.insert((10, 2), Wall);
 
+    let player_pos = (5, 3);
+
     State {
-        player_pos: (5, 3),
+        player_pos: player_pos,
+        initial_player_pos: player_pos,
         cells: cells,
         rng: rng,
         title_screen: true,
@@ -92,33 +95,41 @@ pub fn update_and_render(platform: &Platform, state: &mut State, events: &mut Ve
         draw(platform, state);
 
         draw_button(platform,
-                    6,
-                    8,
+                    5,
+                    9,
                     3,
                     3,
                     "↑",
                     (platform.key_pressed)(KeyCode::Up));
         draw_button(platform,
-                    3,
-                    11,
+                    2,
+                    12,
                     3,
                     3,
                     "←",
                     (platform.key_pressed)(KeyCode::Left));
         draw_button(platform,
-                    6,
-                    11,
+                    5,
+                    12,
                     3,
                     3,
                     "↓",
                     (platform.key_pressed)(KeyCode::Down));
         draw_button(platform,
-                    9,
-                    11,
+                    8,
+                    12,
                     3,
                     3,
                     "→",
                     (platform.key_pressed)(KeyCode::Right));
+
+        draw_button(platform,
+                    12,
+                    12,
+                    3,
+                    3,
+                    "R",
+                    (platform.key_pressed)(KeyCode::R));
 
         false
     } else {
@@ -201,6 +212,10 @@ fn cross_mode_event_handling(platform: &Platform, state: &mut State, event: &Eve
             if state.motion == Stopped {
                 state.motion = Left;
             }
+        }
+        Event::KeyPressed { key: KeyCode::R, ctrl: false, shift: _ } => {
+            println!("reset level");
+            state.player_pos = state.initial_player_pos;
         }
         Event::KeyPressed { key: KeyCode::R, ctrl: true, shift: _ } => {
             println!("reset");
@@ -395,6 +410,7 @@ fn next_level(size: Size, mut rng: StdRng) -> State {
 
     State {
         player_pos: player_pos,
+        initial_player_pos: player_pos,
         cells: cells,
         rng: rng,
         title_screen: false,
