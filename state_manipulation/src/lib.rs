@@ -51,6 +51,7 @@ pub fn new_state(size: Size) -> State {
         cells: cells,
         rng: rng,
         title_screen: true,
+        frame_count: 0,
     }
 }
 
@@ -59,6 +60,8 @@ const START_POS: (i32, i32) = (7, 3);
 #[no_mangle]
 //returns true if quit requested
 pub fn update_and_render(platform: &Platform, state: &mut State, events: &mut Vec<Event>) -> bool {
+    state.frame_count = state.frame_count.overflowing_add(1).0;
+
     if state.title_screen {
         for event in events {
             match *event {
@@ -77,13 +80,50 @@ pub fn update_and_render(platform: &Platform, state: &mut State, events: &mut Ve
             // *state = next_level((platform.size)(), state.rng);
         }
 
-        print_tuple(platform, START_POS, "S");
+        print_tuple(platform, START_POS, goal_string(state.frame_count));
 
         draw(platform, state);
 
         false
     } else {
         game_update_and_render(platform, state, events)
+    }
+}
+
+fn goal_string(frame_count: u32) -> &'static str {
+    match frame_count & 31 {
+        1 => "\u{E010}",
+        2 => "\u{E011}",
+        3 => "\u{E011}",
+        4 => "\u{E012}",
+        5 => "\u{E012}",
+        6 => "\u{E013}",
+        7 => "\u{E013}",
+        8 => "\u{E014}",
+        9 => "\u{E014}",
+        10 => "\u{E015}",
+        11 => "\u{E015}",
+        12 => "\u{E016}",
+        13 => "\u{E016}",
+        14 => "\u{E017}",
+        15 => "\u{E017}",
+        16 => "\u{E018}",
+        17 => "\u{E017}",
+        18 => "\u{E017}",
+        19 => "\u{E016}",
+        20 => "\u{E016}",
+        21 => "\u{E015}",
+        22 => "\u{E015}",
+        23 => "\u{E014}",
+        24 => "\u{E014}",
+        25 => "\u{E013}",
+        26 => "\u{E013}",
+        27 => "\u{E012}",
+        28 => "\u{E012}",
+        29 => "\u{E011}",
+        30 => "\u{E011}",
+        31 => "\u{E010}",
+        _ => "\u{E010}",
     }
 }
 

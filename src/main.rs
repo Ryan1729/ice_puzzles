@@ -99,8 +99,8 @@ fn main() {
     //                   .size(Size::new(TILE_SIZE, TILE_SIZE)));
     terminal::set(font::bitmap(font::Origin::Offset('☒'), "wall.png").size(Size::new(TILE_SIZE,
                                                                                        TILE_SIZE)));
-
-
+    terminal::set(font::bitmap(font::Origin::Offset('\u{E010}'), "goal.png")
+                      .size(Size::new(TILE_SIZE, TILE_SIZE)));
 
 
     let mut app = Application::new();

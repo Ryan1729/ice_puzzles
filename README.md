@@ -1,6 +1,4 @@
 ##TODO
--> goal tile graphics
-  -> 2 or so frame animation?
 -> Movement onto goal space
 -> arrows and WASD display on title screen
 

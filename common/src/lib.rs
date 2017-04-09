@@ -1,10 +1,11 @@
 extern crate rand;
 
 use std::fmt;
-
 use std::collections::HashMap;
-
 use rand::{StdRng, Rand, Rng};
+
+use std::iter::Iterator;
+use std::iter::Cycle;
 
 pub struct Platform {
     pub print_xy: fn(i32, i32, &str),
@@ -29,6 +30,7 @@ pub struct State {
     pub cells: Cells,
     pub rng: StdRng,
     pub title_screen: bool,
+    pub frame_count: u32,
 }
 
 pub type Cells = HashMap<(i32, i32), Cell>;
