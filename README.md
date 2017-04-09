@@ -1,5 +1,5 @@
 ##TODO
--> arrows and WASD display on title screen
+-> actual generation of levels
 
 ## Installation for Compilation
 

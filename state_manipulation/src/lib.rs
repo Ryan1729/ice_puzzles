@@ -86,58 +86,28 @@ pub fn update_and_render(platform: &Platform, state: &mut State, events: &mut Ve
         draw(platform, state);
 
         draw_button(platform,
-                    3,
-                    8,
-                    3,
-                    3,
-                    "W",
-                    (platform.key_pressed)(KeyCode::W));
-        draw_button(platform,
-                    0,
-                    11,
-                    3,
-                    3,
-                    "A",
-                    (platform.key_pressed)(KeyCode::A));
-        draw_button(platform,
-                    3,
-                    11,
-                    3,
-                    3,
-                    "S",
-                    (platform.key_pressed)(KeyCode::S));
-        draw_button(platform,
                     6,
-                    11,
-                    3,
-                    3,
-                    "D",
-                    (platform.key_pressed)(KeyCode::D));
-
-
-        draw_button(platform,
-                    12,
                     8,
                     3,
                     3,
                     "↑",
                     (platform.key_pressed)(KeyCode::Up));
         draw_button(platform,
-                    9,
+                    3,
                     11,
                     3,
                     3,
                     "←",
                     (platform.key_pressed)(KeyCode::Left));
         draw_button(platform,
-                    12,
+                    6,
                     11,
                     3,
                     3,
                     "↓",
                     (platform.key_pressed)(KeyCode::Down));
         draw_button(platform,
-                    15,
+                    9,
                     11,
                     3,
                     3,
