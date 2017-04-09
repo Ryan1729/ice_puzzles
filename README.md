@@ -1,5 +1,10 @@
 ##TODO
 -> actual generation of levels
+  -> random walls
+  -> random non-wall player lacation
+  -> simulate all possible inputs upto length N,
+    keeping a count of the times each cell was visited
+  -> place goal at cell with lowest non-zero count
 
 ## Installation for Compilation
 
