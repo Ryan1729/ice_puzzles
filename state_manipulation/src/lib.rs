@@ -3,6 +3,7 @@ extern crate rand;
 
 use common::*;
 use common::Cell::*;
+use common::Motion::*;
 
 use std::collections::HashMap;
 
@@ -52,6 +53,7 @@ pub fn new_state(size: Size) -> State {
         rng: rng,
         title_screen: true,
         frame_count: 0,
+        motion: Stopped,
     }
 }
 
@@ -64,11 +66,9 @@ pub fn update_and_render(platform: &Platform, state: &mut State, events: &mut Ve
 
     if state.title_screen {
         for event in events {
+            cross_mode_event_handling(platform, state, event);
+
             match *event {
-                Event::KeyPressed { key: KeyCode::R, ctrl: true, shift: _ } => {
-                    println!("reset");
-                    *state = new_state((platform.size)());
-                }
                 Event::Close |
                 Event::KeyPressed { key: KeyCode::Escape, ctrl: _, shift: _ } => return true,
                 _ => (),
@@ -76,8 +76,9 @@ pub fn update_and_render(platform: &Platform, state: &mut State, events: &mut Ve
         }
 
         if state.player_pos == START_POS {
-            println!("START");
-            // *state = next_level((platform.size)(), state.rng);
+            *state = next_level((platform.size)(), state.rng);
+        } else {
+            move_player((platform.size)(), state);
         }
 
         print_tuple(platform, START_POS, goal_string(state.frame_count));
@@ -87,6 +88,111 @@ pub fn update_and_render(platform: &Platform, state: &mut State, events: &mut Ve
         false
     } else {
         game_update_and_render(platform, state, events)
+    }
+}
+
+pub fn game_update_and_render(platform: &Platform,
+                              state: &mut State,
+                              events: &mut Vec<Event>)
+                              -> bool {
+    for event in events {
+        cross_mode_event_handling(platform, state, event);
+
+        match *event {
+            Event::Close |
+            Event::KeyPressed { key: KeyCode::Escape, ctrl: _, shift: _ } => return true,
+            _ => (),
+        }
+    }
+
+    move_player((platform.size)(), state);
+
+    draw(platform, state);
+
+    false
+}
+
+fn move_player(size: Size, state: &mut State) {
+    match state.motion {
+        Stopped => {}
+        Up => {
+            let target = add(state.player_pos, (0, -1));
+            if can_go(size, &state.cells, target) {
+                state.player_pos = target;
+            } else {
+                state.motion = Stopped;
+            }
+        }
+        Right => {
+            let target = add(state.player_pos, (1, 0));
+            if can_go(size, &state.cells, target) {
+                state.player_pos = target;
+            } else {
+                state.motion = Stopped;
+            }
+        }
+        Down => {
+            let target = add(state.player_pos, (0, 1));
+            if can_go(size, &state.cells, target) {
+                state.player_pos = target;
+            } else {
+                state.motion = Stopped;
+            }
+        }
+        Left => {
+            let target = add(state.player_pos, (-1, 0));
+            if can_go(size, &state.cells, target) {
+                state.player_pos = target;
+            } else {
+                state.motion = Stopped;
+            }
+        }
+    }
+}
+
+fn cross_mode_event_handling(platform: &Platform, state: &mut State, event: &Event) {
+    match *event {
+        Event::KeyPressed { key: KeyCode::W, ctrl: _, shift: _ } |
+        Event::KeyPressed { key: KeyCode::Up, ctrl: _, shift: _ } => {
+            if state.motion == Stopped {
+                state.motion = Up;
+            }
+        }
+        Event::KeyPressed { key: KeyCode::D, ctrl: _, shift: _ } |
+        Event::KeyPressed { key: KeyCode::Right, ctrl: _, shift: _ } => {
+            if state.motion == Stopped {
+                state.motion = Right;
+            }
+        }
+        Event::KeyPressed { key: KeyCode::S, ctrl: _, shift: _ } |
+        Event::KeyPressed { key: KeyCode::Down, ctrl: _, shift: _ } => {
+            if state.motion == Stopped {
+                state.motion = Down;
+            }
+        }
+        Event::KeyPressed { key: KeyCode::A, ctrl: _, shift: _ } |
+        Event::KeyPressed { key: KeyCode::Left, ctrl: _, shift: _ } => {
+            if state.motion == Stopped {
+                state.motion = Left;
+            }
+        }
+        Event::KeyPressed { key: KeyCode::R, ctrl: true, shift: _ } => {
+            println!("reset");
+            *state = new_state((platform.size)());
+        }
+        _ => (),
+    }
+}
+
+fn can_go(size: Size, cells: &Cells, (x, y): (i32, i32)) -> bool {
+    if x >= 0 && y >= 0 && x < size.width && y < size.height {
+
+        match cells.get(&(x, y)) {
+            None => true,
+            Some(&Wall) => false,
+        }
+    } else {
+        false
     }
 }
 
@@ -133,16 +239,6 @@ fn print_tuple(platform: &Platform, (x, y): (i32, i32), text: &str) {
     }
 }
 
-
-pub fn game_update_and_render(platform: &Platform,
-                              state: &mut State,
-                              events: &mut Vec<Event>)
-                              -> bool {
-    draw(platform, state);
-
-    false
-}
-
 fn draw(platform: &Platform, state: &State) {
     for (&coords, &cell) in state.cells.iter() {
         print_cell(platform, coords, cell);
@@ -155,4 +251,27 @@ fn print_cell(platform: &Platform, coords: (i32, i32), cell: Cell) {
     // with_layer!(platform, CELL_LAYER, {
     print_tuple(platform, coords, &cell.to_string())
     // })
+}
+
+fn next_level(size: Size, mut rng: StdRng) -> State {
+    let mut cells = HashMap::new();
+
+    State {
+        player_pos: (7, 3),
+        cells: cells,
+        rng: rng,
+        title_screen: false,
+        frame_count: 0,
+        motion: Stopped,
+    }
+}
+
+use std::ops::Add;
+fn add<T: Add<Output = T>>((x1, y1): (T, T), (x2, y2): (T, T)) -> (T, T) {
+    (x1 + x2, y1 + y2)
+}
+
+use std::ops::Sub;
+fn sub<T: Sub<Output = T>>((x1, y1): (T, T), (x2, y2): (T, T)) -> (T, T) {
+    (x1 - x2, y1 - y2)
 }

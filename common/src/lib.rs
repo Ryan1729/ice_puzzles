@@ -31,6 +31,7 @@ pub struct State {
     pub rng: StdRng,
     pub title_screen: bool,
     pub frame_count: u32,
+    pub motion: Motion,
 }
 
 pub type Cells = HashMap<(i32, i32), Cell>;
@@ -40,6 +41,15 @@ pub enum Cell {
     Wall,
 }
 use Cell::*;
+
+#[derive(Copy, Clone, PartialEq)]
+pub enum Motion {
+    Stopped,
+    Up,
+    Right,
+    Down,
+    Left,
+}
 
 impl ToString for Cell {
     fn to_string(&self) -> String {

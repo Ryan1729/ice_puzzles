@@ -1,5 +1,4 @@
 ##TODO
--> Movement onto goal space
 -> arrows and WASD display on title screen
 
 ## Installation for Compilation
