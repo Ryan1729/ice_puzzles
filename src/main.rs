@@ -95,8 +95,8 @@ fn main() {
                            group: config::InputFilterGroup::Mouse,
                            both: false,
                        }]);
-    // terminal::set(font::bitmap(font::Origin::Offset('@'), "plater.png")
-    //                   .size(Size::new(TILE_SIZE, TILE_SIZE)));
+    terminal::set(font::bitmap(font::Origin::Offset('☐'), "initial.png")
+                      .size(Size::new(TILE_SIZE, TILE_SIZE)));
     terminal::set(font::bitmap(font::Origin::Offset('☒'), "wall.png").size(Size::new(TILE_SIZE,
                                                                                        TILE_SIZE)));
     terminal::set(font::bitmap(font::Origin::Offset('\u{E010}'), "goal.png")

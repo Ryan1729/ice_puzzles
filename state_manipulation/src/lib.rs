@@ -281,12 +281,30 @@ fn print_tuple(platform: &Platform, (x, y): (i32, i32), text: &str) {
     }
 }
 
+macro_rules! with_layer {
+    ($platform:expr, $layer:expr, $code:block) => {
+        {
+            let current = ($platform.get_layer)();
+            ($platform.set_layer)($layer);
+
+            $code
+
+            ($platform.set_layer)(current);
+        }
+    }
+}
+
 fn draw(platform: &Platform, state: &State) {
     for (&coords, &cell) in state.cells.iter() {
         print_cell(platform, coords, cell, state.frame_count);
     }
 
-    print_tuple(platform, state.player_pos, "@");
+    print_tuple(platform, state.initial_player_pos, "☐");
+
+    with_layer!(platform, 1, {
+        print_tuple(platform, state.player_pos, "@");
+    })
+
 }
 
 fn draw_unpressed_button_rect(platform: &Platform, x: i32, y: i32, w: i32, h: i32) {
