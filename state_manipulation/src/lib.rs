@@ -421,9 +421,17 @@ fn next_level(size: Size, mut rng: StdRng, max_steps: u8) -> State {
 
     goal_locations.sort_by_key(|&(coord, _)| coord);
 
-    let len = goal_locations.len();
+    let mut len = goal_locations.len();
     if len > 0 {
-        cells.insert(goal_locations.swap_remove(rng.gen_range(0, len)), Goal);
+        loop {
+            let possible_goal = goal_locations.swap_remove(rng.gen_range(0, len));
+
+            len = goal_locations.len();
+            if not_on_edge(size, possible_goal) || len == 0 {
+                cells.insert(possible_goal, Goal);
+                break;
+            }
+        }
     } else {
         cells.insert(player_pos, Goal);
     }
@@ -438,6 +446,10 @@ fn next_level(size: Size, mut rng: StdRng, max_steps: u8) -> State {
         motion: Stopped,
         max_steps: max_steps,
     }
+}
+
+fn not_on_edge(size: Size, (x, y): (i32, i32)) -> bool {
+    x != 0 && y != 0 && x != size.width - 1 && y != size.height - 1
 }
 
 struct DirsIter {
