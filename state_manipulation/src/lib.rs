@@ -22,7 +22,7 @@ pub fn new_state(size: Size) -> State {
     let seed: &[_] = &[42];
     let rng: StdRng = SeedableRng::from_seed(seed);
 
-    next_level(size, rng)
+    next_level(size, rng, 4)
 }
 
 #[cfg(not(debug_assertions))]
@@ -63,6 +63,7 @@ pub fn new_state(size: Size) -> State {
         title_screen: true,
         frame_count: 0,
         motion: Stopped,
+        max_steps: 4,
     }
 }
 
@@ -85,7 +86,7 @@ pub fn update_and_render(platform: &Platform, state: &mut State, events: &mut Ve
         }
 
         if state.player_pos == START_POS {
-            *state = next_level((platform.size)(), state.rng);
+            *state = next_level((platform.size)(), state.rng, state.max_steps);
         } else {
             move_player((platform.size)(), state);
         }
@@ -165,7 +166,8 @@ pub fn game_update_and_render(platform: &Platform,
     move_player((platform.size)(), state);
 
     if let Some(&Goal) = state.cells.get(&state.player_pos) {
-        *state = next_level((platform.size)(), state.rng);
+        state.max_steps += 1;
+        *state = next_level((platform.size)(), state.rng, state.max_steps);
     }
 
     draw(platform, state);
@@ -360,7 +362,7 @@ fn print_cell(platform: &Platform, coords: (i32, i32), cell: Cell, frame_count: 
     // })
 }
 
-fn next_level(size: Size, mut rng: StdRng) -> State {
+fn next_level(size: Size, mut rng: StdRng, max_steps: u8) -> State {
     let mut cells = HashMap::new();
 
     for y in 0..size.height {
@@ -386,7 +388,7 @@ fn next_level(size: Size, mut rng: StdRng) -> State {
 
     let mut counts: HashMap<(i32, i32), u32> = HashMap::new();
 
-    for dirs in DirsIter::new() {
+    for dirs in DirsIter::new(max_steps) {
         let mut current_pos = player_pos;
 
         for &dir in dirs.iter() {
@@ -434,19 +436,32 @@ fn next_level(size: Size, mut rng: StdRng) -> State {
         title_screen: false,
         frame_count: 0,
         motion: Stopped,
+        max_steps: max_steps,
     }
 }
 
 struct DirsIter {
-    index: u8,
+    index: u16,
     started: bool,
+    max: u8,
+    max_index: u16,
 }
 
 impl DirsIter {
-    fn new() -> Self {
+    //if max_+index is not of the form (2 ^ 2n) - 1
+    //certain directions will be favoured over others
+    fn new(max: u8) -> Self {
+        let max_index = if max < 8 {
+            (1 << (2 * max)) - 1
+        } else {
+            std::u16::MAX
+        };
+
         DirsIter {
-            index: 255,
+            index: std::u16::MAX,
             started: false,
+            max: max,
+            max_index: max_index,
         }
     }
 }
@@ -455,7 +470,7 @@ impl Iterator for DirsIter {
     type Item = Vec<Motion>;
 
     fn next(&mut self) -> Option<Vec<Motion>> {
-        if self.started && self.index == 255 {
+        if self.started && (self.index == std::u16::MAX || self.index >= self.max_index) {
             None
         } else {
             self.started = true;
@@ -463,10 +478,14 @@ impl Iterator for DirsIter {
 
             let mut result = Vec::new();
 
-            for &mask in vec![First, Second, Third, Fourth].iter() {
-                match extract_dir(mask, self.index) {
-                    Stopped => {}
-                    dir => result.push(dir),
+            for &mask in TwoBits::all_values().iter() {
+                if result.len() as u8 >= self.max {
+                    break;
+                } else {
+                    match extract_dir(mask, self.index) {
+                        Stopped => {}
+                        dir => result.push(dir),
+                    }
                 }
             }
 
@@ -481,15 +500,33 @@ enum TwoBits {
     Second,
     Third,
     Fourth,
+    Fifth,
+    Sixth,
+    Seventh,
+    Eighth,
 }
 use TwoBits::*;
 
-fn extract_dir(mask: TwoBits, index: u8) -> Motion {
+pub trait AllValues {
+    fn all_values() -> Vec<Self> where Self: std::marker::Sized;
+}
+
+impl AllValues for TwoBits {
+    fn all_values() -> Vec<TwoBits> {
+        vec![First, Second, Third, Fourth, Fifth, Sixth, Seventh, Eighth]
+    }
+}
+
+fn extract_dir(mask: TwoBits, index: u16) -> Motion {
     let bits = match mask {
         First => index & 0b11,
         Second => (index & 0b1100) >> 2,
         Third => (index & 0b110000) >> 4,
         Fourth => (index & 0b11000000) >> 6,
+        Fifth => (index & 0b1100000000) >> 8,
+        Sixth => (index & 0b110000000000) >> 10,
+        Seventh => (index & 0b11000000000000) >> 12,
+        Eighth => (index & 0b1100000000000000) >> 14,
     };
 
     match bits {

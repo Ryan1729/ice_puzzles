@@ -33,6 +33,7 @@ pub struct State {
     pub title_screen: bool,
     pub frame_count: u32,
     pub motion: Motion,
+    pub max_steps: u8,
 }
 
 pub type Cells = HashMap<(i32, i32), Cell>;
